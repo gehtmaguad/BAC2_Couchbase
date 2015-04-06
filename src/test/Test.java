@@ -33,13 +33,13 @@ public class Test {
 	public static void main(String[] args) {
 
 		// System.out.println(selectBlogWithAssociatesEmbeddedN1QL());
-		 System.out.println(selectBlogWithAssociatesReferencedN1QL());
+		// System.out.println(selectBlogWithAssociatesReferencedN1QL());
 
 		// Insert Documents
-//		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
+		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
 //		executeInsertEmbeddedWithNewUser(cluster);
-//		executeInsertReferenced(cluster);
-//		cluster.disconnect();
+		executeInsertReferenced(cluster);
+		cluster.disconnect();
 	}
 
 	public static String randomText(Integer bits) {
@@ -228,7 +228,10 @@ public class Test {
 	public static void executeInsertReferenced(Cluster cluster) {
 
 		// Helper Variable
-		int count;
+		int u;
+		int b;
+		int c;
+		int l;
 
 		// Get Buckets
 		Bucket userBucket = cluster.openBucket("referenced_User_1", "");
@@ -237,63 +240,111 @@ public class Test {
 		Bucket likeBucket = cluster.openBucket("referenced_Likes_1", "");
 
 		// Insert User
-		for (count = 0; count < numberOfUsers; count++) {
+		for (u = 0; u < numberOfUsers; u++) {
 			JsonObject user = JsonObject
 					.empty()
-					.put("user_id", String.valueOf((count + 1)))
+					.put("user_id", String.valueOf((u + 1)))
 					.put("vorname", randomText(100))
 					.put("nachname", randomText(150))
 					.put("email",
 							randomText(120) + "@" + randomText(20) + "."
 									+ randomText(10));
-			JsonDocument doc = JsonDocument.create(String.valueOf(count + 1),
+			JsonDocument doc = JsonDocument.create(String.valueOf(u + 1),
 					user);
 			userBucket.upsert(doc);
 		}
-
-		// Insert Blog
-		for (count = 0; count < numberOfBlogs; count++) {
-			JsonObject blog = JsonObject
+		
+		// Insert Likes
+		HashMap<String,ArrayList<JsonObject>> likesIdMap = new HashMap<String,ArrayList<JsonObject>>();
+		
+		for (l = 0; l < numberOfLikes; l++) {
+			String like_id = String.valueOf(l + 1);
+			String comment_id = String.valueOf(randomNumber(1, numberOfComments));
+			JsonObject like = JsonObject
 					.empty()
-					.put("blog_id", String.valueOf((count + 1)))
-					.put("blogpost", randomText(5000))
+					.put("like_id", like_id)
+					.put("comment_id",comment_id)
 					.put("user_id",
 							String.valueOf(randomNumber(1, numberOfUsers)));
 
-			JsonDocument doc = JsonDocument.create(String.valueOf(count + 1),
-					blog);
-			blogBucket.upsert(doc);
-		}
+			JsonDocument doc = JsonDocument.create(String.valueOf(l + 1),
+					like);
+			likeBucket.upsert(doc);
+			
+			// Comment Id List
+			JsonObject likeId = JsonObject.empty().put("id", like_id);
+			
+			if (likesIdMap.get(comment_id) != null) {
+				ArrayList<JsonObject> likesIdList = likesIdMap.get(comment_id);
+				likesIdList.add(likeId);
+				likesIdMap.put(comment_id, likesIdList);
+				
+			} else {
+
+				ArrayList<JsonObject> likesIdList = new ArrayList<JsonObject>();
+				likesIdList.add(likeId);
+				likesIdMap.put(comment_id, likesIdList);
+			}			
+		}		
 
 		// Insert Comment
-		for (count = 0; count < numberOfComments; count++) {
+		HashMap<String,ArrayList<JsonObject>> commentIdMap = new HashMap<String,ArrayList<JsonObject>>();
+		
+		for (c = 0; c < numberOfComments; c++) {
+			String comment_id = String.valueOf(c + 1);
+			String blog_id = String.valueOf(randomNumber(1, numberOfBlogs));
 			JsonObject comment = JsonObject
 					.empty()
-					.put("comment_id", String.valueOf((count + 1)))
+					.put("comment_id", comment_id)
 					.put("comment", randomText(5000))
 					.put("user_id",
 							String.valueOf(randomNumber(1, numberOfUsers)))
-					.put("blog_id",
-							String.valueOf(randomNumber(1, numberOfBlogs)));
+					.put("blog_id", blog_id	);
 
-			JsonDocument doc = JsonDocument.create(String.valueOf(count + 1),
+			// Push Like Id List on Comment
+			if (likesIdMap.get(comment_id) != null) {
+				comment.put("like_ids", likesIdMap.get(comment_id));
+			}			
+			
+			JsonDocument doc = JsonDocument.create(String.valueOf(c + 1),
 					comment);
 			commentBucket.upsert(doc);
-		}
+			
+			// Blog Id List
+			JsonObject commentId = JsonObject.empty().put("id", comment_id);
+			
+			if (commentIdMap.get(blog_id) != null) {
+				ArrayList<JsonObject> commentIdList = commentIdMap.get(blog_id);
+				commentIdList.add(commentId);
+				commentIdMap.put(blog_id, commentIdList);
+				
+			} else {
 
-		// Insert Likes
-		for (count = 0; count < numberOfLikes; count++) {
-			JsonObject like = JsonObject
+				ArrayList<JsonObject> commentIdList = new ArrayList<JsonObject>();
+				commentIdList.add(commentId);
+				commentIdMap.put(blog_id, commentIdList);
+			}
+		}		
+		
+		// Insert Blog
+		for (b = 0; b < numberOfBlogs; b++) {
+			String blog_id = String.valueOf((b + 1));
+			JsonObject blog = JsonObject
 					.empty()
-					.put("like_id", String.valueOf((count + 1)))
-					.put("comment_id",
-							String.valueOf(randomNumber(1, numberOfComments)))
+					.put("blog_id", blog_id)
+					.put("blogpost", randomText(5000))
 					.put("user_id",
 							String.valueOf(randomNumber(1, numberOfUsers)));
-
-			JsonDocument doc = JsonDocument.create(String.valueOf(count + 1),
-					like);
-			likeBucket.upsert(doc);
+			
+			// Push Comment Id List on Blog
+			if (commentIdMap.get(blog_id) != null) {
+				blog.put("comment_ids", commentIdMap.get(blog_id));
+			}
+			
+			// Perform Insert
+			JsonDocument doc = JsonDocument.create(String.valueOf(b + 1),
+					blog);
+			blogBucket.upsert(doc);
 		}
 
 	}
