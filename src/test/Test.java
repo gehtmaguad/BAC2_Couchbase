@@ -11,6 +11,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
@@ -19,24 +20,31 @@ import org.json.JSONObject;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
-import com.couchbase.client.java.cluster.ClusterManager;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 
 public class Test {
 
-	public static int numberOfUsers = 100000;
-	public static int numberOfBlogs = 100000;
-	public static int numberOfComments = 100000;
-	public static int numberOfLikes = 100000;
+	public static int numberOfUsers = 1000;
+	public static int numberOfBlogs = 1000;
+	public static int numberOfComments = 1000;
+	public static int numberOfLikes = 1000;
 
 	public static void main(String[] args) {
 
-		Cluster cluster = CouchbaseCluster.create("192.168.122.121");
+		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
 		String n1qlIp = "192.168.122.57";
 
-		// executeInsertReferenced(cluster);
-
+//		 executeInsertReferenced(cluster);
+		
+//		// Tag Top Blogger
+//		long startTime = System.nanoTime();
+//		HashMap<String, String> result = tagTopBloggerReferencedN1QL(n1qlIp);
+//		long estimatedTime = System.nanoTime() - startTime;
+//		double seconds = (double) estimatedTime / 1000000000.0;
+//		System.out.println(result);
+//		System.out.println("Duration: " + seconds);
+		
 		// Loop through Referenced Documents
 		// long startTime = System.nanoTime();
 		// ArrayList<HashMap<String, String>> result =
@@ -55,7 +63,9 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 
-		// executeInsertEmbeddedWithNewUser(cluster);
+//		 executeInsertEmbeddedWithNewUser(cluster);
+		 
+		 tagTopBloggerReferencedN1QL(n1qlIp);
 
 		// Loop through Embedded Documents
 		// long startTime = System.nanoTime();
@@ -210,6 +220,7 @@ public class Test {
 					.empty()
 					.put("id", b)
 					.put("blogpost", randomText(5000))
+					.put("user_id", randomNumber(1, numberOfUsers))
 					.put("vorname", randomText(100))
 					.put("nachname", randomText(150))
 					.put("email",
@@ -224,6 +235,7 @@ public class Test {
 						.empty()
 						.put("id", c)
 						.put("comment", randomText(2000))
+						.put("user_id", randomNumber(1, numberOfUsers))
 						.put("vorname", randomText(100))
 						.put("nachname", randomText(150))
 						.put("email",
@@ -237,6 +249,7 @@ public class Test {
 					JsonObject like = JsonObject
 							.empty()
 							.put("id", l)
+							.put("user_id", randomNumber(1, numberOfUsers))
 							.put("vorname", randomText(100))
 							.put("nachname", randomText(150))
 							.put("email",
@@ -268,10 +281,10 @@ public class Test {
 		int l;
 
 		// Get Buckets
-		Bucket userBucket = cluster.openBucket("referenced_User_2", "");
-		Bucket blogBucket = cluster.openBucket("referenced_Blog_2", "");
-		Bucket commentBucket = cluster.openBucket("referenced_Comment_2", "");
-		Bucket likeBucket = cluster.openBucket("referenced_Likes_2", "");
+		Bucket userBucket = cluster.openBucket("referenced_User_1", "");
+		Bucket blogBucket = cluster.openBucket("referenced_Blog_1", "");
+		Bucket commentBucket = cluster.openBucket("referenced_Comment_1", "");
+		Bucket likeBucket = cluster.openBucket("referenced_Likes_1", "");
 
 		// Insert User
 		for (u = 0; u < numberOfUsers; u++) {
@@ -635,7 +648,8 @@ public class Test {
 			HttpHost target = new HttpHost(ip, 8093, "http");
 
 			// TODO: Impement Query Statement
-			HttpGet getRequest = new HttpGet("/query?statement=MISSING");
+			HttpGet getRequest = new HttpGet(
+					"/query?statement=SELECT%20user_id%20FROM%20referenced_Blog_1%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20user_id%20LIMIT%201;");
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
 
@@ -648,11 +662,23 @@ public class Test {
 																// Object
 
 				JSONArray blogList = response.getJSONArray("results");
-				JSONObject blog = blogList.getJSONObject(0).getJSONObject("rb");
+				String topBlogger = blogList.getJSONObject(0).get("user_id")
+						.toString();
 
-				// Parse Result Set
-				resultSet = new HashMap<String, String>();
-				resultSet.put("id", String.valueOf(blog.getInt("blog_id")));
+				HttpPost postRequest = new HttpPost(
+						"/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
+								+ topBlogger + "';");
+
+				httpResponse = httpclient.execute(target, postRequest);
+				entity = httpResponse.getEntity();
+
+				if (entity != null) {
+					retSrc = EntityUtils.toString(entity);
+					response = new JSONObject(retSrc);
+
+					System.out.println(response);
+				}
+
 			}
 
 		} catch (Exception e) {
@@ -677,7 +703,8 @@ public class Test {
 			HttpHost target = new HttpHost(ip, 8093, "http");
 
 			// TODO: Impement Query Statement
-			HttpGet getRequest = new HttpGet("/query?statement=MISSING");
+			HttpGet getRequest = new HttpGet(
+					"/query?statement=SELECT%20user_id%20FROM%20embedded_Blog_2%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20id%20LIMIT%201;");
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
 
@@ -690,11 +717,24 @@ public class Test {
 																// Object
 
 				JSONArray blogList = response.getJSONArray("results");
-				JSONObject blog = blogList.getJSONObject(0).getJSONObject("rb");
+				String topBlogger = blogList.getJSONObject(0).get("user_id")
+						.toString();
 
-				// Parse Result Set
-				resultSet = new HashMap<String, String>();
-				resultSet.put("id", String.valueOf(blog.getInt("blog_id")));
+				System.out.println(topBlogger);
+//				HttpPost postRequest = new HttpPost(
+//						"/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
+//								+ topBlogger + "';");
+//
+//				httpResponse = httpclient.execute(target, postRequest);
+//				entity = httpResponse.getEntity();
+//
+//				if (entity != null) {
+//					retSrc = EntityUtils.toString(entity);
+//					response = new JSONObject(retSrc);
+//
+//					System.out.println(response);
+//				}
+
 			}
 
 		} catch (Exception e) {
