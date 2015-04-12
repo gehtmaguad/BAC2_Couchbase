@@ -36,7 +36,13 @@ public class Test {
 		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
 		String n1qlIp = "192.168.122.57";
 
-		moveItemBetweenUser(cluster, n1qlIp, "1", "2", "sword");
+		 //Move Item Between User
+		 long startTime = System.nanoTime();
+		 HashMap<String, String> result = moveItemBetweenUserEmbedded(cluster, n1qlIp, "10", "1", "sword");
+		 long estimatedTime = System.nanoTime() - startTime;
+		 double seconds = (double) estimatedTime / 1000000000.0;
+		 System.out.println(result);
+		 System.out.println("Duration: " + seconds);		
 
 		// executeInsertReferenced(cluster);
 
@@ -66,7 +72,7 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 
-		// executeInsertEmbeddedWithNewUser(cluster);
+//		 executeInsertEmbeddedWithNewUser(cluster);
 
 		// tagTopBloggerReferencedN1QL(n1qlIp);
 
@@ -198,10 +204,14 @@ public class Test {
 		Bucket blogBucket = cluster.openBucket("embedded_Blog_2", "");
 
 		// Insert User
+		List<String> items = new ArrayList<String>();
+		items.add("laser");
+		items.add("sword");
 		for (count = 0; count < numberOfUsers; count++) {
 			JsonObject user = JsonObject
 					.empty()
 					.put("id", count + 1)
+					.put("item", items)
 					.put("vorname", randomText(100))
 					.put("nachname", randomText(150))
 					.put("email",
@@ -755,7 +765,7 @@ public class Test {
 		return resultSet;
 	}
 
-	public static HashMap<String, String> moveItemBetweenUser(Cluster cluster,
+	public static HashMap<String, String> moveItemBetweenUserEmbedded(Cluster cluster,
 			String ip, String fromUserId, String toUserId, String transactionItem) {
 
 		HashMap<String, String> resultSet = null;
@@ -832,53 +842,6 @@ public class Test {
 		transaction.put("state", "done");
 		doc = JsonDocument.create(String.valueOf(1), transaction);
 		transactionBucket.upsert(doc);
-		//
-		// try {
-		// // specify the host, protocol, and port
-		// HttpHost target = new HttpHost(ip, 8093, "http");
-		//
-		// // TODO: Impement Query Statement
-		// HttpGet getRequest = new HttpGet(
-		// "/query?statement=SELECT%20user_id%20FROM%20referenced_Blog_1%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20user_id%20LIMIT%201;");
-		// HttpResponse httpResponse = httpclient.execute(target, getRequest);
-		// HttpEntity entity = httpResponse.getEntity();
-		//
-		// if (entity != null) {
-		// String retSrc = EntityUtils.toString(entity);
-		// // parsing JSON
-		// JSONObject response = new JSONObject(retSrc); // Convert
-		// // String to
-		// // JSON
-		// // Object
-		//
-		// JSONArray blogList = response.getJSONArray("results");
-		// String topBlogger = blogList.getJSONObject(0).get("user_id")
-		// .toString();
-		//
-		// HttpPost postRequest = new HttpPost(
-		// "/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
-		// + topBlogger + "';");
-		//
-		// httpResponse = httpclient.execute(target, postRequest);
-		// entity = httpResponse.getEntity();
-		//
-		// if (entity != null) {
-		// retSrc = EntityUtils.toString(entity);
-		// response = new JSONObject(retSrc);
-		//
-		// System.out.println(response);
-		// }
-		//
-		// }
-		//
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// } finally {
-		// // When HttpClient instance is no longer needed,
-		// // shut down the connection manager to ensure
-		// // immediate deallocation of all system resources
-		// httpclient.getConnectionManager().shutdown();
-		// }
 
 		return resultSet;
 
