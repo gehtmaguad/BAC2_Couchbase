@@ -36,14 +36,6 @@ public class Test {
 		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
 		String n1qlIp = "192.168.122.57";
 
-		 //Move Item Between User
-		 long startTime = System.nanoTime();
-		 HashMap<String, String> result = moveItemBetweenUserEmbedded(cluster, n1qlIp, "10", "1", "sword");
-		 long estimatedTime = System.nanoTime() - startTime;
-		 double seconds = (double) estimatedTime / 1000000000.0;
-		 System.out.println(result);
-		 System.out.println("Duration: " + seconds);		
-
 		// executeInsertReferenced(cluster);
 
 		// // Tag Top Blogger
@@ -72,7 +64,7 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 
-//		 executeInsertEmbeddedWithNewUser(cluster);
+		// executeInsertEmbeddedWithNewUser(cluster);
 
 		// tagTopBloggerReferencedN1QL(n1qlIp);
 
@@ -94,6 +86,17 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 		// cluster.disconnect();
+
+		// executeInsertUserWithItem(cluster, "embedded_User_2");
+
+		// Move Item Between User
+		// long startTime = System.nanoTime();
+		// HashMap<String, String> result = moveItemBetweenUserEmbedded(cluster,
+		// n1qlIp, "10", "1", "sword");
+		// long estimatedTime = System.nanoTime() - startTime;
+		// double seconds = (double) estimatedTime / 1000000000.0;
+		// System.out.println(result);
+		// System.out.println("Duration: " + seconds);
 	}
 
 	public static String randomText(Integer bits) {
@@ -204,14 +207,10 @@ public class Test {
 		Bucket blogBucket = cluster.openBucket("embedded_Blog_2", "");
 
 		// Insert User
-		List<String> items = new ArrayList<String>();
-		items.add("laser");
-		items.add("sword");
 		for (count = 0; count < numberOfUsers; count++) {
 			JsonObject user = JsonObject
 					.empty()
 					.put("id", count + 1)
-					.put("item", items)
 					.put("vorname", randomText(100))
 					.put("nachname", randomText(150))
 					.put("email",
@@ -281,6 +280,36 @@ public class Test {
 
 			JsonDocument doc = JsonDocument.create(String.valueOf(b), blog);
 			blogBucket.upsert(doc);
+		}
+
+	}
+
+	public static void executeInsertUserWithItem(Cluster cluster,
+			String userbucket) {
+
+		// Helper Variable
+		int count;
+
+		// Get Buckets
+		Bucket userBucket = cluster.openBucket(userbucket, "");
+
+		// Insert User
+		List<String> items = new ArrayList<String>();
+		items.add("laser");
+		items.add("sword");
+		for (count = 0; count < numberOfUsers; count++) {
+			JsonObject user = JsonObject
+					.empty()
+					.put("id", count + 1)
+					.put("item", items)
+					.put("vorname", randomText(100))
+					.put("nachname", randomText(150))
+					.put("email",
+							randomText(120) + "@" + randomText(20) + "."
+									+ randomText(10));
+			JsonDocument doc = JsonDocument.create(String.valueOf(count + 1),
+					user);
+			userBucket.upsert(doc);
 		}
 
 	}
@@ -765,8 +794,9 @@ public class Test {
 		return resultSet;
 	}
 
-	public static HashMap<String, String> moveItemBetweenUserEmbedded(Cluster cluster,
-			String ip, String fromUserId, String toUserId, String transactionItem) {
+	public static HashMap<String, String> moveItemBetweenUserEmbedded(
+			Cluster cluster, String ip, String fromUserId, String toUserId,
+			String transactionItem) {
 
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
@@ -777,8 +807,8 @@ public class Test {
 
 		// Create Transaction Object and set state to INIT
 		JsonObject transaction = JsonObject.empty().put("id", "1")
-				.put("from", fromUserId).put("to", toUserId).put("item", transactionItem)
-				.put("state", "init");
+				.put("from", fromUserId).put("to", toUserId)
+				.put("item", transactionItem).put("state", "init");
 		JsonDocument doc = JsonDocument.create(String.valueOf(1), transaction);
 		transactionBucket.upsert(doc);
 
@@ -787,7 +817,6 @@ public class Test {
 		String from = transaction.getString("from");
 		String to = transaction.getString("to");
 		String item = transaction.getString("item");
-		String state = "pending";
 
 		// Set State to PENDING
 		transaction.put("state", "pending");
@@ -795,10 +824,9 @@ public class Test {
 		transactionBucket.upsert(doc);
 
 		// Update First Document and Set Transaction to 1
-		JsonObject fromUser = userBucket.get(from).content();
-
 		// Update the Item List (Loop through old List and create the new one
 		// without transaction item
+		JsonObject fromUser = userBucket.get(from).content();
 		List<String> myList = new ArrayList<String>();
 		List<Object> itemObjects = fromUser.getArray("item").toList();
 		for (Object a : itemObjects) {
@@ -806,7 +834,6 @@ public class Test {
 				myList.add(a.toString());
 			}
 		}
-
 		fromUser.put("item", myList);
 		fromUser.put("transaction", "1");
 		doc = JsonDocument.create(String.valueOf(from), fromUser);
@@ -837,7 +864,7 @@ public class Test {
 		doc = JsonDocument.create(String.valueOf(to), toUser);
 		userBucket.upsert(doc);
 
-		// Retrieve Transaction Object and set State to COMMITTED
+		// Retrieve Transaction Object and set State to DONE
 		transaction = transactionBucket.get("1").content();
 		transaction.put("state", "done");
 		doc = JsonDocument.create(String.valueOf(1), transaction);
