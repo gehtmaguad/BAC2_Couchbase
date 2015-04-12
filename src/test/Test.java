@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -35,16 +36,18 @@ public class Test {
 		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
 		String n1qlIp = "192.168.122.57";
 
-//		 executeInsertReferenced(cluster);
-		
-//		// Tag Top Blogger
-//		long startTime = System.nanoTime();
-//		HashMap<String, String> result = tagTopBloggerReferencedN1QL(n1qlIp);
-//		long estimatedTime = System.nanoTime() - startTime;
-//		double seconds = (double) estimatedTime / 1000000000.0;
-//		System.out.println(result);
-//		System.out.println("Duration: " + seconds);
-		
+		moveItemBetweenUser(cluster, n1qlIp, "1", "2", "sword");
+
+		// executeInsertReferenced(cluster);
+
+		// // Tag Top Blogger
+		// long startTime = System.nanoTime();
+		// HashMap<String, String> result = tagTopBloggerReferencedN1QL(n1qlIp);
+		// long estimatedTime = System.nanoTime() - startTime;
+		// double seconds = (double) estimatedTime / 1000000000.0;
+		// System.out.println(result);
+		// System.out.println("Duration: " + seconds);
+
 		// Loop through Referenced Documents
 		// long startTime = System.nanoTime();
 		// ArrayList<HashMap<String, String>> result =
@@ -63,9 +66,9 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 
-//		 executeInsertEmbeddedWithNewUser(cluster);
-		 
-		 tagTopBloggerReferencedN1QL(n1qlIp);
+		// executeInsertEmbeddedWithNewUser(cluster);
+
+		// tagTopBloggerReferencedN1QL(n1qlIp);
 
 		// Loop through Embedded Documents
 		// long startTime = System.nanoTime();
@@ -721,19 +724,22 @@ public class Test {
 						.toString();
 
 				System.out.println(topBlogger);
-//				HttpPost postRequest = new HttpPost(
-//						"/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
-//								+ topBlogger + "';");
-//
-//				httpResponse = httpclient.execute(target, postRequest);
-//				entity = httpResponse.getEntity();
-//
-//				if (entity != null) {
-//					retSrc = EntityUtils.toString(entity);
-//					response = new JSONObject(retSrc);
-//
-//					System.out.println(response);
-//				}
+
+				// TODO: Update User also in Comment and Likes
+
+				// HttpPost postRequest = new HttpPost(
+				// "/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
+				// + topBlogger + "';");
+				//
+				// httpResponse = httpclient.execute(target, postRequest);
+				// entity = httpResponse.getEntity();
+				//
+				// if (entity != null) {
+				// retSrc = EntityUtils.toString(entity);
+				// response = new JSONObject(retSrc);
+				//
+				// System.out.println(response);
+				// }
 
 			}
 
@@ -747,6 +753,135 @@ public class Test {
 		}
 
 		return resultSet;
+	}
+
+	public static HashMap<String, String> moveItemBetweenUser(Cluster cluster,
+			String ip, String fromUserId, String toUserId, String transactionItem) {
+
+		HashMap<String, String> resultSet = null;
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+
+		Bucket userBucket = cluster.openBucket("embedded_User_2", "");
+		Bucket transactionBucket = cluster.openBucket("embedded_Transaction_2",
+				"");
+
+		// Create Transaction Object and set state to INIT
+		JsonObject transaction = JsonObject.empty().put("id", "1")
+				.put("from", fromUserId).put("to", toUserId).put("item", transactionItem)
+				.put("state", "init");
+		JsonDocument doc = JsonDocument.create(String.valueOf(1), transaction);
+		transactionBucket.upsert(doc);
+
+		// Retrieve Transaction Object
+		transaction = transactionBucket.get("1").content();
+		String from = transaction.getString("from");
+		String to = transaction.getString("to");
+		String item = transaction.getString("item");
+		String state = "pending";
+
+		// Set State to PENDING
+		transaction.put("state", "pending");
+		doc = JsonDocument.create(String.valueOf(1), transaction);
+		transactionBucket.upsert(doc);
+
+		// Update First Document and Set Transaction to 1
+		JsonObject fromUser = userBucket.get(from).content();
+
+		// Update the Item List (Loop through old List and create the new one
+		// without transaction item
+		List<String> myList = new ArrayList<String>();
+		List<Object> itemObjects = fromUser.getArray("item").toList();
+		for (Object a : itemObjects) {
+			if (!a.toString().equals(item)) {
+				myList.add(a.toString());
+			}
+		}
+
+		fromUser.put("item", myList);
+		fromUser.put("transaction", "1");
+		doc = JsonDocument.create(String.valueOf(from), fromUser);
+		userBucket.upsert(doc);
+
+		// Update Second Document and Set Transaction to 1
+		JsonObject toUser = userBucket.get(to).content();
+		toUser.getArray("item").add(item);
+		toUser.put("transaction", "1");
+		doc = JsonDocument.create(String.valueOf(to), toUser);
+		userBucket.upsert(doc);
+
+		// Retrieve Transaction Object and set State to COMMITTED
+		transaction = transactionBucket.get("1").content();
+		transaction.put("state", "committed");
+		doc = JsonDocument.create(String.valueOf(1), transaction);
+		transactionBucket.upsert(doc);
+
+		// Update First Document and Set Transaction to 0
+		fromUser = userBucket.get(from).content();
+		fromUser.put("transaction", "0");
+		doc = JsonDocument.create(String.valueOf(from), fromUser);
+		userBucket.upsert(doc);
+
+		// Update Second Document and Set Transaction to 0
+		toUser = userBucket.get(to).content();
+		toUser.put("transaction", "0");
+		doc = JsonDocument.create(String.valueOf(to), toUser);
+		userBucket.upsert(doc);
+
+		// Retrieve Transaction Object and set State to COMMITTED
+		transaction = transactionBucket.get("1").content();
+		transaction.put("state", "done");
+		doc = JsonDocument.create(String.valueOf(1), transaction);
+		transactionBucket.upsert(doc);
+		//
+		// try {
+		// // specify the host, protocol, and port
+		// HttpHost target = new HttpHost(ip, 8093, "http");
+		//
+		// // TODO: Impement Query Statement
+		// HttpGet getRequest = new HttpGet(
+		// "/query?statement=SELECT%20user_id%20FROM%20referenced_Blog_1%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20user_id%20LIMIT%201;");
+		// HttpResponse httpResponse = httpclient.execute(target, getRequest);
+		// HttpEntity entity = httpResponse.getEntity();
+		//
+		// if (entity != null) {
+		// String retSrc = EntityUtils.toString(entity);
+		// // parsing JSON
+		// JSONObject response = new JSONObject(retSrc); // Convert
+		// // String to
+		// // JSON
+		// // Object
+		//
+		// JSONArray blogList = response.getJSONArray("results");
+		// String topBlogger = blogList.getJSONObject(0).get("user_id")
+		// .toString();
+		//
+		// HttpPost postRequest = new HttpPost(
+		// "/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
+		// + topBlogger + "';");
+		//
+		// httpResponse = httpclient.execute(target, postRequest);
+		// entity = httpResponse.getEntity();
+		//
+		// if (entity != null) {
+		// retSrc = EntityUtils.toString(entity);
+		// response = new JSONObject(retSrc);
+		//
+		// System.out.println(response);
+		// }
+		//
+		// }
+		//
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// } finally {
+		// // When HttpClient instance is no longer needed,
+		// // shut down the connection manager to ensure
+		// // immediate deallocation of all system resources
+		// httpclient.getConnectionManager().shutdown();
+		// }
+
+		return resultSet;
+
 	}
 
 }
