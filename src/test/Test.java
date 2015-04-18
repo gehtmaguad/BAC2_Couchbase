@@ -26,10 +26,10 @@ import com.couchbase.client.java.document.json.JsonObject;
 
 public class Test {
 
-	public static int numberOfUsers = 1000;
-	public static int numberOfBlogs = 1000;
-	public static int numberOfComments = 1000;
-	public static int numberOfLikes = 1000;
+	public static int numberOfUsers = 100000;
+	public static int numberOfBlogs = 100000;
+	public static int numberOfComments = 100000;
+	public static int numberOfLikes = 100000;
 
 	public static void main(String[] args) {
 
@@ -38,7 +38,7 @@ public class Test {
 
 		// executeInsertReferenced(cluster);
 
-		// // Tag Top Blogger
+		// Tag Top Blogger
 		// long startTime = System.nanoTime();
 		// HashMap<String, String> result = tagTopBloggerReferencedN1QL(n1qlIp);
 		// long estimatedTime = System.nanoTime() - startTime;
@@ -55,10 +55,10 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 
-		// // Get one merged Document from Referenced Documents
+		// Get one merged Document from Referenced Documents
 		// long startTime = System.nanoTime();
 		// HashMap<String, String> result =
-		// selectBlogWithAssociatesReferencedN1QLSingle(n1qlIp, 22452);
+		// selectBlogWithAssociatesReferencedN1QLSingle(n1qlIp, 252);
 		// long estimatedTime = System.nanoTime() - startTime;
 		// double seconds = (double) estimatedTime / 1000000000.0;
 		// System.out.println(result);
@@ -66,7 +66,13 @@ public class Test {
 
 		// executeInsertEmbeddedWithNewUser(cluster);
 
-		// tagTopBloggerReferencedN1QL(n1qlIp);
+		// Tag Top Blogger
+		// long startTime = System.nanoTime();
+		// HashMap<String, String> result = tagTopBloggerEmbeddedN1QL(n1qlIp);;
+		// long estimatedTime = System.nanoTime() - startTime;
+		// double seconds = (double) estimatedTime / 1000000000.0;
+		// System.out.println(result);
+		// System.out.println("Duration: " + seconds);
 
 		// Loop through Embedded Documents
 		// long startTime = System.nanoTime();
@@ -87,9 +93,19 @@ public class Test {
 		// System.out.println("Duration: " + seconds);
 		// cluster.disconnect();
 
-		// executeInsertUserWithItem(cluster, "embedded_User_2");
+		// executeInsertUserWithItem(cluster);
 
-		// Move Item Between User
+		// // Move Item Between User Transaction
+		// long startTime = System.nanoTime();
+		// HashMap<String, String> result =
+		// moveItemBetweenUserEmbeddedTransaction(cluster,
+		// n1qlIp, "10", "1", "sword");
+		// long estimatedTime = System.nanoTime() - startTime;
+		// double seconds = (double) estimatedTime / 1000000000.0;
+		// System.out.println(result);
+		// System.out.println("Duration: " + seconds);
+
+		// // Move Item Between User No Transaction
 		// long startTime = System.nanoTime();
 		// HashMap<String, String> result = moveItemBetweenUserEmbedded(cluster,
 		// n1qlIp, "10", "1", "sword");
@@ -120,8 +136,8 @@ public class Test {
 		int count;
 
 		// Get Buckets
-		Bucket userBucket = cluster.openBucket("embedded_User_2", "");
-		Bucket blogBucket = cluster.openBucket("embedded_Blog_2", "");
+		Bucket userBucket = cluster.openBucket("embedded_User", "");
+		Bucket blogBucket = cluster.openBucket("embedded_Blog", "");
 
 		// Insert User
 		for (count = 0; count < numberOfUsers; count++) {
@@ -147,7 +163,8 @@ public class Test {
 		for (b = 1; b <= numberOfBlogs; b++) {
 
 			Map<String, String> user = new HashMap<String, String>();
-			user = selectUserById(randomNumber(1, numberOfUsers));
+			user = selectUserById(randomNumber(1, numberOfUsers),
+					"embedded_User");
 
 			JsonObject blog = JsonObject.empty().put("id", b)
 					.put("blogpost", randomText(5000))
@@ -160,7 +177,8 @@ public class Test {
 
 			for (c = 1; c <= 3; c++) {
 
-				user = selectUserById(randomNumber(1, numberOfUsers));
+				user = selectUserById(randomNumber(1, numberOfUsers),
+						"embedded_User");
 
 				JsonObject comment = JsonObject.empty().put("id", c)
 						.put("comment", randomText(2000))
@@ -173,7 +191,8 @@ public class Test {
 
 				for (l = 1; l <= 3; l++) {
 
-					user = selectUserById(randomNumber(1, numberOfUsers));
+					user = selectUserById(randomNumber(1, numberOfUsers),
+							"embedded_User");
 
 					JsonObject like = JsonObject.empty().put("id", l)
 							.put("user_id", user.get("user_id"))
@@ -203,8 +222,8 @@ public class Test {
 		int count;
 
 		// Get Buckets
-		Bucket userBucket = cluster.openBucket("embedded_User_2", "");
-		Bucket blogBucket = cluster.openBucket("embedded_Blog_2", "");
+		Bucket userBucket = cluster.openBucket("embedded_User", "");
+		Bucket blogBucket = cluster.openBucket("embedded_Blog", "");
 
 		// Insert User
 		for (count = 0; count < numberOfUsers; count++) {
@@ -284,10 +303,10 @@ public class Test {
 
 	}
 
-	public static void executeInsertUserWithItem(Cluster cluster,
-			String userbucket) {
+	public static void executeInsertUserWithItem(Cluster cluster) {
 
 		// Helper Variable
+		String userbucket = "embedded_User";
 		int count;
 
 		// Get Buckets
@@ -323,10 +342,10 @@ public class Test {
 		int l;
 
 		// Get Buckets
-		Bucket userBucket = cluster.openBucket("referenced_User_1", "");
-		Bucket blogBucket = cluster.openBucket("referenced_Blog_1", "");
-		Bucket commentBucket = cluster.openBucket("referenced_Comment_1", "");
-		Bucket likeBucket = cluster.openBucket("referenced_Likes_1", "");
+		Bucket userBucket = cluster.openBucket("referenced_User", "");
+		Bucket blogBucket = cluster.openBucket("referenced_Blog", "");
+		Bucket commentBucket = cluster.openBucket("referenced_Comment", "");
+		Bucket likeBucket = cluster.openBucket("referenced_Likes", "");
 
 		// Insert User
 		for (u = 0; u < numberOfUsers; u++) {
@@ -437,7 +456,7 @@ public class Test {
 	}
 
 	// Helper Method
-	private static Map<String, String> selectUserById(int id) {
+	private static Map<String, String> selectUserById(int id, String bucketName) {
 
 		Map<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
@@ -448,10 +467,8 @@ public class Test {
 
 			// specify the get request
 			HttpGet getRequest = new HttpGet(
-					"/query?statement=SELECT%20*%20FROM%20referenced_User%20WHERE%20id="
-							+ id);
-
-			System.out.println("executing request to " + target);
+					"/query?statement=SELECT%20*%20FROM%20" + bucketName
+							+ "%20WHERE%20id=" + id);
 
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
@@ -464,7 +481,7 @@ public class Test {
 
 				JSONArray userList = result.getJSONArray("results");
 				JSONObject user = userList.getJSONObject(0).getJSONObject(
-						"referenced_User");
+						bucketName);
 
 				// Parse Result Set
 				resultSet = new HashMap<String, String>();
@@ -493,6 +510,9 @@ public class Test {
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
+		// Helper
+		String embedded_Blog = "embedded_Blog";
+
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(ip, 8093, "http");
@@ -501,8 +521,8 @@ public class Test {
 			for (i = 1; i <= 10; i++) {
 
 				HttpGet getRequest = new HttpGet(
-						"/query?statement=SELECT%20*%20FROM%20embedded_Blog%20WHERE%20id="
-								+ i);
+						"/query?statement=SELECT%20*%20FROM%20" + embedded_Blog
+								+ "%20WHERE%20id=" + i);
 				HttpResponse httpResponse = httpclient.execute(target,
 						getRequest);
 				HttpEntity entity = httpResponse.getEntity();
@@ -517,7 +537,7 @@ public class Test {
 
 					JSONArray blogList = response.getJSONArray("results");
 					JSONObject blog = blogList.getJSONObject(0).getJSONObject(
-							"embedded_Blog");
+							embedded_Blog);
 
 					// Parse Result Set
 					resultSet = new HashMap<String, String>();
@@ -544,13 +564,16 @@ public class Test {
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
+		// Helper
+		String embedded_Blog = "embedded_Blog";
+
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(ip, 8093, "http");
 
 			HttpGet getRequest = new HttpGet(
-					"/query?statement=SELECT%20*%20FROM%20embedded_Blog_2%20WHERE%20id="
-							+ id);
+					"/query?statement=SELECT%20*%20FROM%20" + embedded_Blog
+							+ "%20WHERE%20id=" + id);
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
 
@@ -564,7 +587,7 @@ public class Test {
 
 				JSONArray blogList = response.getJSONArray("results");
 				JSONObject blog = blogList.getJSONObject(0).getJSONObject(
-						"embedded_Blog_2");
+						embedded_Blog);
 
 				// Parse Result Set
 				resultSet = new HashMap<String, String>();
@@ -591,6 +614,12 @@ public class Test {
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
+		// Helper
+		String referenced_Blog = "referenced_Blog";
+		String referenced_Comment = "referenced_Comment";
+		String referenced_User = "referenced_User";
+		String referenced_Like = "referenced_Like";
+
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(ip, 8093, "http");
@@ -599,8 +628,21 @@ public class Test {
 			for (i = 1; i <= numberOfBlogs; i++) {
 
 				HttpGet getRequest = new HttpGet(
-						"/query?statement=SELECT%20*%20FROM%20referenced_Blog_1%20rb%20LEFT%20JOIN%20referenced_Comment_1%20rc%20ON%20KEYS%20ARRAY%20c.id%20FOR%20c%20IN%20rb.comment_ids%20END%20JOIN%20referenced_User_1%20rub%20ON%20KEYS%20rb.user_id%20LEFT%20JOIN%20referenced_User_1%20ruc%20ON%20KEYS%20rc.user_id%20LEFT%20JOIN%20referenced_Likes_1%20rl%20ON%20KEYS%20%20ARRAY%20l.id%20FOR%20l%20IN%20rc.like_ids%20END%20LEFT%20JOIN%20referenced_User_1%20rul%20ON%20KEYS%20rl.user_id%20WHERE%20rb.blog_id%20='"
+						"/query?statement=SELECT%20*%20FROM%20"
+								+ referenced_Blog
+								+ "%20rb%20LEFT%20JOIN%20"
+								+ referenced_Comment
+								+ "%20rc%20ON%20KEYS%20ARRAY%20c.id%20FOR%20c%20IN%20rb.comment_ids%20END%20JOIN%20"
+								+ referenced_User
+								+ "%20rub%20ON%20KEYS%20rb.user_id%20LEFT%20JOIN%20"
+								+ referenced_User
+								+ "%20ruc%20ON%20KEYS%20rc.user_id%20LEFT%20JOIN%20"
+								+ referenced_Like
+								+ "%20rl%20ON%20KEYS%20%20ARRAY%20l.id%20FOR%20l%20IN%20rc.like_ids%20END%20LEFT%20JOIN%20"
+								+ referenced_User
+								+ "%20rul%20ON%20KEYS%20rl.user_id%20WHERE%20rb.blog_id%20='"
 								+ i + "'");
+
 				HttpResponse httpResponse = httpclient.execute(target,
 						getRequest);
 				HttpEntity entity = httpResponse.getEntity();
@@ -645,9 +687,25 @@ public class Test {
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(ip, 8093, "http");
+			String referenced_Blog = "referenced_Blog";
+			String referenced_Comment = "referenced_Comment";
+			String referenced_User = "referenced_User";
+			String referenced_Like = "referenced_Likes";
 
 			HttpGet getRequest = new HttpGet(
-					"/query?statement=SELECT%20*%20FROM%20referenced_Blog_2%20rb%20LEFT%20JOIN%20referenced_Comment_2%20rc%20ON%20KEYS%20ARRAY%20c.id%20FOR%20c%20IN%20rb.comment_ids%20END%20JOIN%20referenced_User_2%20rub%20ON%20KEYS%20rb.user_id%20LEFT%20JOIN%20referenced_User_2%20ruc%20ON%20KEYS%20rc.user_id%20LEFT%20JOIN%20referenced_Likes_2%20rl%20ON%20KEYS%20%20ARRAY%20l.id%20FOR%20l%20IN%20rc.like_ids%20END%20LEFT%20JOIN%20referenced_User_2%20rul%20ON%20KEYS%20rl.user_id%20WHERE%20rb.blog_id%20='"
+					"/query?statement=SELECT%20*%20FROM%20"
+							+ referenced_Blog
+							+ "%20rb%20LEFT%20JOIN%20"
+							+ referenced_Comment
+							+ "%20rc%20ON%20KEYS%20ARRAY%20c.id%20FOR%20c%20IN%20rb.comment_ids%20END%20JOIN%20"
+							+ referenced_User
+							+ "%20rub%20ON%20KEYS%20rb.user_id%20LEFT%20JOIN%20"
+							+ referenced_User
+							+ "%20ruc%20ON%20KEYS%20rc.user_id%20LEFT%20JOIN%20"
+							+ referenced_Like
+							+ "%20rl%20ON%20KEYS%20%20ARRAY%20l.id%20FOR%20l%20IN%20rc.like_ids%20END%20LEFT%20JOIN%20"
+							+ referenced_User
+							+ "%20rul%20ON%20KEYS%20rl.user_id%20WHERE%20rb.blog_id%20='"
 							+ id + "'");
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
@@ -659,6 +717,8 @@ public class Test {
 																// String to
 																// JSON
 																// Object
+
+				System.out.println(response);
 
 				JSONArray blogList = response.getJSONArray("results");
 				JSONObject blog = blogList.getJSONObject(0).getJSONObject("rb");
@@ -680,18 +740,23 @@ public class Test {
 		return resultSet;
 	}
 
-	public static HashMap<String, String> tagTopBloggerEmbeddedN1QL(String ip) {
+	public static HashMap<String, String> tagTopBloggerReferencedN1QL(String ip) {
 
-		HashMap<String, String> resultSet = null;
+		HashMap<String, String> resultSet = new HashMap<String, String>();
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(ip, 8093, "http");
 
-			// TODO: Impement Query Statement
+			// HELPER
+			String referenced_Blog = "referenced_Blog";
+			String referenced_User = "referenced_User";
+
 			HttpGet getRequest = new HttpGet(
-					"/query?statement=SELECT%20user_id%20FROM%20referenced_Blog_1%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20user_id%20LIMIT%201;");
+					"/query?statement=SELECT%20user_id%20FROM%20"
+							+ referenced_Blog
+							+ "%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20user_id%20LIMIT%201;");
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
 
@@ -703,12 +768,16 @@ public class Test {
 																// JSON
 																// Object
 
+				resultSet.put("result", response.toString());
+
 				JSONArray blogList = response.getJSONArray("results");
 				String topBlogger = blogList.getJSONObject(0).get("user_id")
 						.toString();
 
 				HttpPost postRequest = new HttpPost(
-						"/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
+						"/query?statement=UPDATE%20"
+								+ referenced_User
+								+ "%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
 								+ topBlogger + "';");
 
 				httpResponse = httpclient.execute(target, postRequest);
@@ -717,8 +786,6 @@ public class Test {
 				if (entity != null) {
 					retSrc = EntityUtils.toString(entity);
 					response = new JSONObject(retSrc);
-
-					System.out.println(response);
 				}
 
 			}
@@ -735,18 +802,22 @@ public class Test {
 		return resultSet;
 	}
 
-	public static HashMap<String, String> tagTopBloggerReferencedN1QL(String ip) {
+	public static HashMap<String, String> tagTopBloggerEmbeddedN1QL(String ip) {
 
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
+
+		// HELPER
+		String embedded_Blog = "embedded_Blog";
 
 		try {
 			// specify the host, protocol, and port
 			HttpHost target = new HttpHost(ip, 8093, "http");
 
-			// TODO: Impement Query Statement
 			HttpGet getRequest = new HttpGet(
-					"/query?statement=SELECT%20user_id%20FROM%20embedded_Blog_2%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20id%20LIMIT%201;");
+					"/query?statement=SELECT%20user_id%20FROM%20"
+							+ embedded_Blog
+							+ "%20GROUP%20BY%20user_id%20ORDER%20BY%20count(user_id)%20DESC,%20id%20LIMIT%201;");
 			HttpResponse httpResponse = httpclient.execute(target, getRequest);
 			HttpEntity entity = httpResponse.getEntity();
 
@@ -764,24 +835,60 @@ public class Test {
 
 				System.out.println(topBlogger);
 
-				// TODO: Update User also in Comment and Likes
+				// Update Blog
+				HttpPost postRequest = new HttpPost(
+						"/query?statement=UPDATE%20"
+								+ embedded_Blog
+								+ "%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20"
+								+ topBlogger + ";");
 
-				// HttpPost postRequest = new HttpPost(
-				// "/query?statement=UPDATE%20referenced_User_1%20SET%20rank%20=%20'TopBlogger'%20WHERE%20user_id%20=%20'"
-				// + topBlogger + "';");
-				//
-				// httpResponse = httpclient.execute(target, postRequest);
-				// entity = httpResponse.getEntity();
-				//
-				// if (entity != null) {
-				// retSrc = EntityUtils.toString(entity);
-				// response = new JSONObject(retSrc);
-				//
-				// System.out.println(response);
-				// }
+				httpResponse = httpclient.execute(target, postRequest);
+				entity = httpResponse.getEntity();
+
+				if (entity != null) {
+					retSrc = EntityUtils.toString(entity);
+					response = new JSONObject(retSrc);
+
+					System.out.println(response);
+				}
+
+				// Update Comment
+				postRequest = new HttpPost(
+						"/query?statement=UPDATE%20"
+								+ embedded_Blog
+								+ "%20SET%20c.rank%20=%20'TopBlogger'%20FOR%20c%20IN%20Comment%20WHEN%20c.user_id%20=%20"
+								+ topBlogger + "%20END;");
+
+				httpResponse = httpclient.execute(target, postRequest);
+				entity = httpResponse.getEntity();
+
+				if (entity != null) {
+					retSrc = EntityUtils.toString(entity);
+					response = new JSONObject(retSrc);
+
+					System.out.println(response);
+				}
+
+				// Update Like
+				// TODO: Implement
+				// Dummy
+				postRequest = new HttpPost(
+						"/query?statement=UPDATE%20"
+								+ embedded_Blog
+								+ "%20SET%20c.rank%20=%20'TopBlogger'%20FOR%20c%20IN%20Comment%20WHEN%20c.user_id%20=%20"
+								+ topBlogger + "%20END;");
+
+				httpResponse = httpclient.execute(target, postRequest);
+				entity = httpResponse.getEntity();
+
+				if (entity != null) {
+					retSrc = EntityUtils.toString(entity);
+					response = new JSONObject(retSrc);
+
+					System.out.println(response);
+				}
 
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -794,15 +901,15 @@ public class Test {
 		return resultSet;
 	}
 
-	public static HashMap<String, String> moveItemBetweenUserEmbedded(
+	public static HashMap<String, String> moveItemBetweenUserEmbeddedTransaction(
 			Cluster cluster, String ip, String fromUserId, String toUserId,
 			String transactionItem) {
 
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
-		Bucket userBucket = cluster.openBucket("embedded_User_2", "");
-		Bucket transactionBucket = cluster.openBucket("embedded_Transaction_2",
+		Bucket userBucket = cluster.openBucket("embedded_User", "");
+		Bucket transactionBucket = cluster.openBucket("embedded_Transaction",
 				"");
 
 		// Create Transaction Object and set state to INIT
@@ -869,6 +976,43 @@ public class Test {
 		transaction.put("state", "done");
 		doc = JsonDocument.create(String.valueOf(1), transaction);
 		transactionBucket.upsert(doc);
+
+		return resultSet;
+
+	}
+
+	public static HashMap<String, String> moveItemBetweenUserEmbedded(
+			Cluster cluster, String ip, String fromUserId, String toUserId,
+			String transactionItem) {
+
+		HashMap<String, String> resultSet = null;
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+
+		Bucket userBucket = cluster.openBucket("embedded_User", "");
+		String from = "2";
+		String to = "1";
+		String item = "laser";
+
+		// Update First Document
+		// Update the Item List (Loop through old List and create the new one
+		// without transaction item
+		JsonObject fromUser = userBucket.get(from).content();
+		List<String> myList = new ArrayList<String>();
+		List<Object> itemObjects = fromUser.getArray("item").toList();
+		for (Object a : itemObjects) {
+			if (!a.toString().equals(item)) {
+				myList.add(a.toString());
+			}
+		}
+		fromUser.put("item", myList);
+		JsonDocument doc = JsonDocument.create(String.valueOf(from), fromUser);
+		userBucket.upsert(doc);
+
+		// Update Second Document
+		JsonObject toUser = userBucket.get(to).content();
+		toUser.getArray("item").add(item);
+		doc = JsonDocument.create(String.valueOf(to), toUser);
+		userBucket.upsert(doc);
 
 		return resultSet;
 
