@@ -26,25 +26,25 @@ import com.couchbase.client.java.document.json.JsonObject;
 
 public class Test {
 
-	public static int numberOfUsers = 100000;
-	public static int numberOfBlogs = 100000;
-	public static int numberOfComments = 100000;
-	public static int numberOfLikes = 100000;
+	public static int numberOfUsers = 50000;
+	public static int numberOfBlogs = 50000;
+	public static int numberOfComments = 50000;
+	public static int numberOfLikes = 50000;
 
 	public static void main(String[] args) {
 
 		Cluster cluster = CouchbaseCluster.create("192.168.122.120");
 		String n1qlIp = "192.168.122.57";
 
-		// executeInsertReferenced(cluster);
+//		 executeInsertReferenced(cluster);
 
-		// Tag Top Blogger
-		// long startTime = System.nanoTime();
-		// HashMap<String, String> result = tagTopBloggerReferencedN1QL(n1qlIp);
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
+//		// Tag Top Blogger
+//		 long startTime = System.nanoTime();
+//		 HashMap<String, String> result = tagTopBloggerReferencedN1QL(n1qlIp);
+//		 long estimatedTime = System.nanoTime() - startTime;
+//		 double seconds = (double) estimatedTime / 1000000000.0;
+//		 System.out.println(result);
+//		 System.out.println("Duration: " + seconds);
 
 		// Loop through Referenced Documents
 		// long startTime = System.nanoTime();
@@ -55,64 +55,64 @@ public class Test {
 		// System.out.println(result);
 		// System.out.println("Duration: " + seconds);
 
-		// Get one merged Document from Referenced Documents
-		// long startTime = System.nanoTime();
-		// HashMap<String, String> result =
-		// selectBlogWithAssociatesReferencedN1QLSingle(n1qlIp, 252);
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
+//		 // Get one merged Document from Referenced Documents
+//		 long startTime = System.nanoTime();
+//		 HashMap<String, String> result =
+//		 selectBlogWithAssociatesReferencedN1QLSingle(n1qlIp, 252);
+//		 long estimatedTime = System.nanoTime() - startTime;
+//		 double seconds = (double) estimatedTime / 1000000000.0;
+//		 System.out.println(result);
+//		 System.out.println("Duration: " + seconds);
 
-		// executeInsertEmbeddedWithNewUser(cluster);
+//		 executeInsertEmbeddedWithNewUser(cluster);
 
-		// Tag Top Blogger
-		// long startTime = System.nanoTime();
-		// HashMap<String, String> result = tagTopBloggerEmbeddedN1QL(n1qlIp);;
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
+		 // Tag Top Blogger
+		 long startTime = System.nanoTime();
+		 HashMap<String, String> result = tagTopBloggerEmbeddedN1QL(n1qlIp);;
+		 long estimatedTime = System.nanoTime() - startTime;
+		 double seconds = (double) estimatedTime / 1000000000.0;
+		 System.out.println(result);
+		 System.out.println("Duration: " + seconds);
 
-		// Loop through Embedded Documents
-		// long startTime = System.nanoTime();
-		// ArrayList<HashMap<String, String>> result =
-		// selectBlogWithAssociatesEmbeddedN1QL(n1qlIp);
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
+//		 Loop through Embedded Documents
+//		 long startTime = System.nanoTime();
+//		 ArrayList<HashMap<String, String>> result =
+//		 selectBlogWithAssociatesEmbeddedN1QL(n1qlIp);
+//		 long estimatedTime = System.nanoTime() - startTime;
+//		 double seconds = (double) estimatedTime / 1000000000.0;
+//		 System.out.println(result);
+//		 System.out.println("Duration: " + seconds);
 
-		// // Get one Document from Embedded Documents
-		// long startTime = System.nanoTime();
-		// HashMap<String, String> result =
-		// selectBlogWithAssociatesEmbeddedN1QLSingle(n1qlIp, 222);
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
-		// cluster.disconnect();
+//		 // Get one Document from Embedded Documents
+//		 long startTime = System.nanoTime();
+//		 HashMap<String, String> result =
+//		 selectBlogWithAssociatesEmbeddedN1QLSingle(n1qlIp, 243);
+//		 long estimatedTime = System.nanoTime() - startTime;
+//		 double seconds = (double) estimatedTime / 1000000000.0;
+//		 System.out.println(result);
+//		 System.out.println("Duration: " + seconds);
+//		 cluster.disconnect();
 
-		// executeInsertUserWithItem(cluster);
+//		 executeInsertUserWithItem(cluster);
 
-		// // Move Item Between User Transaction
-		// long startTime = System.nanoTime();
-		// HashMap<String, String> result =
-		// moveItemBetweenUserEmbeddedTransaction(cluster,
-		// n1qlIp, "10", "1", "sword");
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
+		 // Move Item Between User Transaction
+//		 long startTime = System.nanoTime();
+//		 HashMap<String, String> result =
+//		 moveItemBetweenUserEmbeddedTransaction(cluster,
+//		 n1qlIp, "10", "1", "sword");
+//		 long estimatedTime = System.nanoTime() - startTime;
+//		 double seconds = (double) estimatedTime / 1000000000.0;
+//		 System.out.println(result);
+//		 System.out.println("Duration: " + seconds);
 
-		// // Move Item Between User No Transaction
-		// long startTime = System.nanoTime();
-		// HashMap<String, String> result = moveItemBetweenUserEmbedded(cluster,
-		// n1qlIp, "10", "1", "sword");
-		// long estimatedTime = System.nanoTime() - startTime;
-		// double seconds = (double) estimatedTime / 1000000000.0;
-		// System.out.println(result);
-		// System.out.println("Duration: " + seconds);
+//		 // Move Item Between User No Transaction
+//		 long startTime = System.nanoTime();
+//		 HashMap<String, String> result = moveItemBetweenUserEmbedded(cluster,
+//		 n1qlIp, "10", "1", "sword");
+//		 long estimatedTime = System.nanoTime() - startTime;
+//		 double seconds = (double) estimatedTime / 1000000000.0;
+//		 System.out.println(result);
+//		 System.out.println("Duration: " + seconds);
 	}
 
 	public static String randomText(Integer bits) {
@@ -222,8 +222,8 @@ public class Test {
 		int count;
 
 		// Get Buckets
-		Bucket userBucket = cluster.openBucket("embedded_User", "");
-		Bucket blogBucket = cluster.openBucket("embedded_Blog", "");
+		Bucket userBucket = cluster.openBucket("embedded_User_2", "");
+		Bucket blogBucket = cluster.openBucket("embedded_Blog_2", "");
 
 		// Insert User
 		for (count = 0; count < numberOfUsers; count++) {
@@ -306,7 +306,7 @@ public class Test {
 	public static void executeInsertUserWithItem(Cluster cluster) {
 
 		// Helper Variable
-		String userbucket = "embedded_User";
+		String userbucket = "embedded_User_3";
 		int count;
 
 		// Get Buckets
@@ -511,7 +511,7 @@ public class Test {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
 		// Helper
-		String embedded_Blog = "embedded_Blog";
+		String embedded_Blog = "embedded_Blog_3";
 
 		try {
 			// specify the host, protocol, and port
@@ -565,7 +565,7 @@ public class Test {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
 		// Helper
-		String embedded_Blog = "embedded_Blog";
+		String embedded_Blog = "embedded_Blog_3";
 
 		try {
 			// specify the host, protocol, and port
@@ -584,6 +584,7 @@ public class Test {
 																// String to
 																// JSON
 																// Object
+				System.out.println(response);
 
 				JSONArray blogList = response.getJSONArray("results");
 				JSONObject blog = blogList.getJSONObject(0).getJSONObject(
@@ -808,7 +809,7 @@ public class Test {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
 		// HELPER
-		String embedded_Blog = "embedded_Blog";
+		String embedded_Blog = "embedded_Blog_2";
 
 		try {
 			// specify the host, protocol, and port
@@ -829,6 +830,8 @@ public class Test {
 																// JSON
 																// Object
 
+				System.out.println(response);
+				
 				JSONArray blogList = response.getJSONArray("results");
 				String topBlogger = blogList.getJSONObject(0).get("user_id")
 						.toString();
@@ -871,7 +874,7 @@ public class Test {
 
 				// Update Like
 				// TODO: Implement
-				// Dummy
+				// Dummy: UPDATE embedded_Blog_2 SET c.rank = 'WHATEVER' FOR c IN Comment[2].Likes WHEN c.user_id = 539 END;
 				postRequest = new HttpPost(
 						"/query?statement=UPDATE%20"
 								+ embedded_Blog
@@ -908,8 +911,8 @@ public class Test {
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
-		Bucket userBucket = cluster.openBucket("embedded_User", "");
-		Bucket transactionBucket = cluster.openBucket("embedded_Transaction",
+		Bucket userBucket = cluster.openBucket("embedded_User_3", "");
+		Bucket transactionBucket = cluster.openBucket("embedded_Transaction_2",
 				"");
 
 		// Create Transaction Object and set state to INIT
@@ -988,7 +991,7 @@ public class Test {
 		HashMap<String, String> resultSet = null;
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 
-		Bucket userBucket = cluster.openBucket("embedded_User", "");
+		Bucket userBucket = cluster.openBucket("embedded_User_3", "");
 		String from = "2";
 		String to = "1";
 		String item = "laser";
